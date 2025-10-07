@@ -1,0 +1,109 @@
+// VEX V5 C++ Project with Competition Template
+#include "vex.h"
+using namespace vex;
+vex::brain Brain;
+vex::controller con;
+vex::motor      frontLeft(vex::PORT10,vex::gearSetting::ratio18_1, true);//Front Left Drive
+vex::motor      backLeft(vex::PORT11,vex::gearSetting::ratio18_1, true);//Back Left Drive
+vex::motor      frontRight(vex::PORT12,vex::gearSetting::ratio18_1, false);//Front Right Drive
+vex::motor      backRight(vex::PORT13,vex::gearSetting::ratio18_1, false);//Back Right Drive
+vex::motor      shooter(vex::PORT14,vex::gearSetting::ratio18_1, false);//Shooter
+vex::motor      intake(vex::PORT15,vex::gearSetting::ratio18_1, false);//Intake
+vex::motor_group  leftSide = motor_group(frontLeft, backLeft);//Left drive side
+vex::motor_group  rightSide = motor_group(frontRight, backRight);//Right drive side
+
+// Creates a competition object that allows access to Competition methods.
+vex::competition Competition;
+
+
+void pre_auton() {
+    // All activities that occur before competition start
+    // Example: setting initial positions
+
+}
+
+void autonomous() {
+    // Place autonomous code here
+    
+}
+
+void drivercontrol() {
+    // Place drive control code here, inside the loop
+    while (true) {
+    /*int driveThing = 1;
+    
+    if(con.ButtonDown.pressing())
+    {
+    driveThing = 1;
+    }
+    else if (con.ButtonUp.pressing())
+    {
+    driveThing = 2;
+    }  
+    else
+    {
+    driveThing = driveThing;
+    }
+    
+    if(driveThing == 1)
+    {
+    LeftMotor.spin(vex::directionType::fwd, (Controller1.Axis3.value() + Controller1.Axis1.value()*2), vex::velocityUnits::pct);
+    RightMotor.spin(vex::directionType::fwd, (Controller1.Axis3.value() - Controller1.Axis1.value()*2), vex::velocityUnits::pct);
+    }
+    else
+    {
+    LeftMotor.spin(vex::directionType::rev, (Controller1.Axis3.value() + Controller1.Axis1.value()*2), vex::velocityUnits::pct);
+    RightMotor.spin(vex::directionType::fwd, (Controller1.Axis3.value() - Controller1.Axis1.value()*2), vex::velocityUnits::pct);
+    leftSide.spin(vex::directionType::fwd, con.Axis1.value() + con.Axis3.value()*2, vex::velocityUnits::pct);
+    rightSide.spin(vex::directionType::fwd, con.Axis1.value() - con.Axis3.value()*2, vex::velocityUnits::pct);
+    }
+    */
+    //Arcade drive test
+    leftSide.spin(vex::directionType::fwd, (con.Axis3.value() + con.Axis1.value()*2), vex::velocityUnits::pct);
+    rightSide.spin(vex::directionType::fwd, (con.Axis3.value() - con.Axis1.value()*2), vex::velocityUnits::pct);
+    
+    
+    if(con.ButtonL1.pressing())//shooter foward when L1 pressed
+    {
+    shooter.spin(vex::directionType::fwd, 100, percentUnits::pct);
+    }
+    else if(con.ButtonL2.pressing())//shooter reverse when L2 pressed
+    {
+    shooter.spin(vex::directionType::rev, 100, percentUnits::pct);
+    }
+    else//Stop the shooter
+    {
+    shooter.stop(coast);
+    }
+    
+    if(con.ButtonR1.pressing())//Intake foward when R1 pressed
+    {
+    intake.spin(vex::directionType::fwd, 100, percentUnits::pct);
+    }
+    else if(con.ButtonR2.pressing())//Intake reverse when R2 pressed
+    {
+    intake.spin(vex::directionType::rev, 100, percentUnits::pct);
+    }
+    else//Stop the intake
+    {
+    intake.stop(coast);
+    }
+    
+    
+    
+    }
+}
+
+int main() {
+    // Do not adjust the lines below
+
+    // Set up (but don't start) callbacks for autonomous and driver control periods.
+    Competition.autonomous(autonomous);
+    Competition.drivercontrol(drivercontrol);
+
+    // Run the pre-autonomous function.
+    pre_auton();
+
+    // Robot Mesh Studio runtime continues to run until all threads and
+    // competition callbacks are finished.
+}

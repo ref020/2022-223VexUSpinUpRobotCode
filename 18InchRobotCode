@@ -1,0 +1,226 @@
+// VEX V5 C++ Project with Competition Template
+#include "vex.h"
+using namespace vex;
+vex::brain Brain;
+vex::controller con;
+vex::motor  	frontLeft(vex::PORT2,vex::gearSetting::ratio36_1, false);		//Front Left Drive
+vex::motor  	backLeft(vex::PORT4,vex::gearSetting::ratio36_1, false);		//Back Left Drive
+vex::motor  	frontRight(vex::PORT1,vex::gearSetting::ratio36_1, true);		//Front Right Drive
+vex::motor  	backRight(vex::PORT3,vex::gearSetting::ratio36_1, true);		//Back Right Drive
+vex::motor  	shooter(vex::PORT8,vex::gearSetting::ratio36_1, false);		    //Shooter
+vex::motor  	intake(vex::PORT20,vex::gearSetting::ratio18_1, false);			//Intake
+vex::motor  	roller(vex::PORT6, vex::gearSetting::ratio18_1, false);		//Roller
+vex::motor      hDrive(vex::PORT9, vex::gearSetting::ratio18_1, true);
+vex::motor      punch(vex::PORT10, vex::gearSetting::ratio6_1);
+vex::motor      endgame(vex::PORT6, vex::gearSetting::ratio6_1);
+vex::motor_group  leftSide = motor_group(frontLeft, backLeft);					//Left drive side	
+vex::motor_group  rightSide = motor_group(frontRight, backRight);				//Right drive side
+vex::motor_group  frontWheels = motor_group(frontRight, frontLeft);				//front wheels
+vex::motor_group  backWheels = motor_group(backRight, backLeft);				//back wheels
+vex::motor_group  drive = motor_group(frontRight, backRight,frontLeft, backLeft);//Right drive side
+int disks = 0;
+
+
+// Creates a competition object that allows access to Competition methods.
+vex::competition Competition;
+void intaker(int disks){
+    intake.spinFor(vex::directionType::fwd, (disks*3)+1, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+    drive.spinFor(vex::directionType::fwd,1000, vex::rotationUnits::deg, 100, vex::velocityUnits::pct);
+    drive.stop(brake);
+    intake.stop(coast);
+}
+
+void shoot(int dimk){
+    int i = 0;
+    while(i <= dimk){
+    shooter.spinFor(vex::directionType::fwd, 1, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+    punch.spinFor(vex::directionType::fwd, 1, vex::timeUnits::sec, 100,vex::velocityUnits::pct);
+    wait(.75);
+    drive.stop(coast);
+    punch.stop(coast);
+    shooter.stop(coast);
+    i ++ ;
+    }
+}
+
+void strafeLeft(){																//Function to allow for strafing left
+	hDrive.spin(vex::directionType::fwd,100,pct);
+}
+
+void strafeRight(){																//Function to allow for strafing left
+	hDrive.spin(vex::directionType::rev,100,pct);
+}
+
+void turnLeft(){																//Function to turn left
+	frontLeft.spin(vex::directionType::fwd,100,pct);
+	frontRight.spin(vex::directionType::fwd,100,pct);
+	backLeft.spin(vex::directionType::fwd,100,pct);
+	backRight.spin(vex::directionType::fwd,100,pct);
+}
+
+void turnRight(){																//Function to turn right
+	frontLeft.spin(vex::directionType::rev,100,pct);
+	frontRight.spin(vex::directionType::rev,100,pct);
+	backLeft.spin(vex::directionType::rev,100,pct);
+	backRight.spin(vex::directionType::rev,100,pct);
+}
+
+void doStuff() {
+	Brain.Screen.print("HELP ME THEY'RE MAKING ME DO THIS AGAINST MY WILL");
+}
+//Put the position on the controller
+/*void printPosition() {
+  // Print GPS position values to the V5 Brain
+  Con.Screen.print("X: %.2f", GPS8.xPosition(mm));
+  Con.Screen.print("  Y: %.2f", GPS8.yPosition(mm));
+  Con.Screen.newLine();
+}
+*/
+void pre_auton() {
+	//GPS8.calibrate();
+    //printPosition();
+}
+
+void autonomous() {
+	doStuff();
+	drive.spin(fwd,100,pct);
+	wait(1,sec);
+	roller.spinFor(vex::directionType::fwd, 1.5, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+	//Skills pathing:
+	//Get first roller
+    leftSide.spinToPosition(1000, vex::rotationUnits::deg);
+    roller.spinFor(vex::directionType::fwd, 1.5, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+    leftSide.spinToPosition(000, vex::rotationUnits::deg);
+    leftSide.spin(vex::directionType::fwd,100,vex::velocityUnits::pct);    
+    rightSide.spin(fwd,90,pct);
+    intake.spin(fwd,100,pct);
+    //shoot preloads
+    shoot(2);
+    wait(3,sec);
+    //grab first row
+    drive.stop(coast);
+    intake.stop(coast);
+    //shoot first row
+    shoot(3);
+    //pick up and shoot the first stack-*******************
+    drive.spin(fwd,100,pct);
+    intake.spin(fwd,100,pct);
+    wait(3);
+    shoot(3);
+    //shoot(2);
+    //intaker(3);
+    
+    shoot(3);
+    //Back up onto line
+    intaker(3);
+    shoot(3);
+    intaker(3);
+    shoot(3);
+    intaker(3);
+    shoot(3);
+    roller.spinFor(vex::directionType::fwd, 1.5, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+    intaker(3);
+    shoot(3);
+    intaker(3);
+    shoot(3);
+    roller.spinFor(vex::directionType::fwd, 1.5, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+    intaker(3);
+    roller.spinFor(vex::directionType::fwd, 1.5, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+    shoot(3);
+    intaker(3);
+    shoot(3);
+    intaker(3);
+    shoot(3);
+    endgame.spinFor(vex::directionType::fwd, 1.5, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+
+	
+}
+ 
+void drivercontrol() {
+// Place drive control code here, inside the loop
+while (true) {
+//Controller show percentage for shooter
+
+    if(con.ButtonR2.pressing()){
+    leftSide.spin(vex::directionType::fwd, ( con.Axis3.value() - con.Axis1.value()),vex::velocityUnits::pct);
+    rightSide.spin(vex::directionType::rev, ( con.Axis3.value() + con.Axis1.value()), vex::velocityUnits::pct);
+    /*
+    wait(100);
+    leftSide.spin(vex::directionType::fwd, ( con.Axis3.value() - con.Axis1.value()),vex::velocityUnits::pct);
+    rightSide.spin(vex::directionType::rev, ( con.Axis3.value() + con.Axis1.value()), vex::velocityUnits::pct);
+    */
+    }
+    else{
+    leftSide.spin(vex::directionType::fwd, ( con.Axis3.value() - con.Axis1.value()),vex::velocityUnits::pct);
+    rightSide.spin(vex::directionType::fwd, ( con.Axis3.value() + con.Axis1.value()), vex::velocityUnits::pct);
+    }
+
+
+    hDrive.spin(fwd, con.Axis4.value() - con.Axis3.value(), vex::velocityUnits::pct);
+  
+  /*
+    if(con.ButtonRight.pressing())
+    {
+        hDrive.spin(vex::directionType::fwd, 50, percentUnits::pct);
+    }
+    else if(con.ButtonLeft.pressing())
+    {
+        hDrive.spin(vex::directionType::rev, 50, percentUnits::pct);
+    }
+    else
+    {
+        hDrive.stop(vex::brakeType::coast);
+    }
+*/
+	
+	if(con.ButtonL1.pressing())   		 //shooter spin 100% when L1 pressed
+	{
+		intake.spin(vex::directionType::fwd, 100, percentUnits::pct);
+	}
+	else if(con.ButtonL2.pressing())   	 //shooter spin 60% when L2 pressed
+	{
+		intake.spin(vex::directionType::rev, 100, percentUnits::pct);
+	}
+	else   					         	//variable speed shooter
+	{
+		intake.stop(coast);
+	}   
+
+
+	if(con.ButtonR1.pressing())   		 //Intake forward when R1 pressed
+	{
+		shooter.spin(fwd,100,pct);
+		wait(1);
+		punch.spin(fwd,100,pct);
+	}
+	else   					 //Stop the intake
+	{
+		punch.stop(brakeType::coast);
+	    shooter.stop(brakeType::coast);
+	}
+
+    if(con.ButtonUp.pressing() && con.ButtonDown.pressing())
+    {
+        endgame.spin(fwd,100,pct);
+    }
+
+
+
+
+
+	}
+	}
+ 
+int main() {
+	// Do not adjust the lines below
+ 
+	// Set up (but don't start) callbacks for autonomous and driver control periods.
+	Competition.autonomous(autonomous);
+	Competition.drivercontrol(drivercontrol);
+ 
+	// Run the pre-autonomous function.
+	pre_auton();
+ 
+	// Robot Mesh Studio runtime continues to run until all threads and
+	// competition callbacks are finished.
+}

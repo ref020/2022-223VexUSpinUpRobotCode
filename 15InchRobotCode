@@ -1,0 +1,164 @@
+#include "vex.h"
+using namespace vex;
+vex::brain Brain;           //brain is named Brain
+vex::controller con;        //controller is named con
+vex::motor  frontLeft(vex::PORT20,vex::gearSetting::ratio18_1, true);//Front Left Drive, Port 12
+vex::motor  backLeft(vex::PORT19,vex::gearSetting::ratio18_1, true);//Back Left Drive, Port 13
+vex::motor  frontRight(vex::PORT14,vex::gearSetting::ratio18_1, false);//Front Right Drive, Port 19
+vex::motor  backRight(vex::PORT15,vex::gearSetting::ratio18_1, false);//Back Right Drive, Port 20
+vex::motor  catapault(vex::PORT11,vex::gearSetting::ratio36_1, false);//Catapault, Port 11
+vex::motor  intake(vex::PORT10,vex::gearSetting::ratio18_1, false);//Intake, Port 10
+vex::limit  dydx(Brain.ThreeWirePort.A);//Limit Switch, Plugged in port A
+vex::motor_group  leftSide = motor_group(frontLeft, backLeft);//Left drive side motor group
+vex::motor_group  rightSide = motor_group(frontRight, backRight);//Right drive side motor group
+vex::motor_group  drive = motor_group(frontRight, backRight,frontLeft, backLeft);//Right drive side motor group
+//vex::gps GPS1 = gps(PORT1, 0.00, 0.00, inch, 180); //gps sensor, Port 1
+int x = dydx.pressing();//sets the x variable to the status of the limit switch
+
+vex::competition Competition;
+
+//function to drive foward
+void driveForward() {
+    leftSide.spin(fwd,100,pct);
+    rightSide.spin(fwd,100,pct);
+}
+
+//function to drive backwards
+void driveBackwards() {
+    leftSide.spin(rev,100,pct);
+    rightSide.spin(rev,100,pct);
+}
+
+//function to turn left
+void turnLeft() {
+    leftSide.spin(fwd,100,pct);
+    rightSide.spin(rev,100,pct);
+}
+
+//function to turn right
+void turnRight() {
+    leftSide.spin(rev,100,pct);
+    rightSide.spin(fwd,100,pct);
+}
+
+//Function to print gps position on controller
+void printPosition() {
+    //con.Screen.print("X: %.2f", GPS1.xPosition(mm));
+    //con.Screen.print("Y: %.2f", GPS1.yPosition(mm));
+    con.Screen.newLine();
+}
+
+void pre_auton() {
+	//GPS1.calibrate();
+    printPosition();
+}
+ 
+void autonomous() {
+    //turn roller
+    intake.spinToPosition(90, vex::rotationUnits::deg);
+
+    //shoot catapault
+    catapault.spinToPosition(1440, vex::rotationUnits::deg);
+    
+    //turn backend 135 degrees counterclockwise towards 3 stack
+    turnLeft();
+    //until(GPS1.orientation == 135);
+    drive.stop(brake);
+
+    //pick up 3 stack of disks
+    driveForward();
+    intake.spin(fwd,100,pct);
+
+    //get to center of field 
+    intake.stop(coast);
+    //goTo (GPS1.xPosition == 11, GPS1.yPosition == 11);
+    drive.stop(brake);
+
+    //turn to goal
+    turnLeft();
+    //until(GPS1.orientation == 225);
+    drive.stop(brake);
+
+    //Shoot 3 in goal
+    catapault.spin(fwd,100,pct);
+
+    //turn facing line of disks
+    turnRight();
+    //until(GPS1.orientation == 135);
+    drive.stop(brake);
+
+    //pick up next 3 disks
+    intake.spinToPosition(1440, vex::rotationUnits::deg);
+
+    //turn to goal
+    //drive.turn(GPS1.orientation == 225);
+
+    //shoot 3 disks
+    catapault.spinToPosition(1440, vex::rotationUnits::deg);
+    
+
+}
+ 
+void drivercontrol() {
+    // Place drive control code here, inside the loop
+    while (true) {
+        //Left Axis 2 %5d
+        //Controller show percentage for shooter
+        //int shooterSpeed = 100;
+
+        x = dydx.pressing();
+
+        //Arcade drive for robot
+        leftSide.spin(vex::directionType::fwd, (con.Axis3.value() + con.Axis1.value()*1),vex::velocityUnits::pct);
+        rightSide.spin(vex::directionType::fwd, (con.Axis3.value() - con.Axis1.value()*1), vex::velocityUnits::pct);
+        
+
+
+        if(con.ButtonL1.pressing())   		 //catapault spin 100% when L1 pressed
+        {
+            catapault.spin(vex::directionType::fwd, 100, percentUnits::pct);
+        }
+
+        else if(con.ButtonL2.pressing())   	 //catapault spin 60% when L2 pressed
+        {
+            while (dydx.pressing() == 0) 
+            {
+                catapault.spin(vex::directionType::fwd, 10, percentUnits::pct);
+            }
+        }
+
+        else   					         	//variable speed catapault
+        {
+            catapault.stop(coast);
+        }   
+        
+        if(con.ButtonR1.pressing())   		 //Intake forward when R1 pressed
+        {
+            intake.spin(vex::directionType::fwd, 100, percentUnits::pct);
+        }
+
+        else if(con.ButtonR2.pressing())   	 //Intake reverse when R2 pressed
+        {
+            intake.spin(vex::directionType::rev, 100, percentUnits::pct);
+        }
+
+        else   					 //Stop the intake
+        {
+            intake.stop(brakeType::coast);
+        }
+        
+    }
+}
+ 
+int main() {
+	// Do not adjust the lines below
+ 
+	// Set up (but don't start) callbacks for autonomous and driver control periods.
+	Competition.autonomous(autonomous);
+	Competition.drivercontrol(drivercontrol);
+ 
+	// Run the pre-autonomous function.
+	pre_auton();
+ 
+	
+}
